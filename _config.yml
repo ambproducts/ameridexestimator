@@ -1,0 +1,13 @@
+# GitHub Pages configuration for AmeriDex Estimator
+# Enables the site to be served from GitHub Pages at:
+# https://ambproducts.github.io/ameridexestimator
+
+title: AmeriDex Deck Estimator
+description: Free public-facing deck design and material cost estimator for AmeriDex Composite Decking.
+
+# Serve all files as-is (no Jekyll processing needed)
+plugins: []
+exclude:
+  - README.md
+  - '*.json'
+  - node_modules

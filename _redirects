@@ -1,0 +1,4 @@
+# Netlify redirects (no-op on GitHub Pages, active if deployed to Netlify)
+# Clean URL: /estimate -> /index.html
+/estimate   /index.html   200
+/thankyou   /thankyou.html 200

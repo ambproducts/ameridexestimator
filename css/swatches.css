@@ -1,0 +1,91 @@
+/* ==========================================================
+   AMERIDEX ESTIMATOR - Swatch Visual Enhancements
+   Adds wood-grain texture overlays and hover lift to
+   color swatches so they feel more like real deck boards.
+   Imported in index.html after style.css.
+   ========================================================== */
+
+/* Grain overlay on every swatch circle */
+.swatch-circle {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+/* Subtle diagonal grain lines via repeating-linear-gradient */
+.swatch-circle::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: repeating-linear-gradient(
+    118deg,
+    rgba(255,255,255,0.00) 0px,
+    rgba(255,255,255,0.00) 3px,
+    rgba(255,255,255,0.06) 3px,
+    rgba(255,255,255,0.06) 4px,
+    rgba(255,255,255,0.00) 4px,
+    rgba(255,255,255,0.00) 9px,
+    rgba(0,0,0,0.04) 9px,
+    rgba(0,0,0,0.04) 10px
+  );
+  pointer-events: none;
+}
+
+/* Lift on hover */
+.swatch-item:hover .swatch-circle {
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.22);
+}
+
+/* Selected ring pulse */
+.swatch-item.selected .swatch-circle {
+  transform: scale(1.10);
+  box-shadow: 0 0 0 3px var(--color-accent), 0 4px 14px rgba(0,0,0,0.20);
+}
+
+/* Board style card: accent left-border on selected */
+.product-card.selected {
+  border-left: 4px solid var(--color-accent);
+}
+
+/* Product card icon scale on hover */
+.product-card:hover .product-card-icon {
+  display: inline-block;
+  transform: scale(1.15);
+  transition: transform 0.18s;
+}
+
+/* Estimate range block: subtle shimmer strip at top */
+.estimate-range-block {
+  position: relative;
+  overflow: hidden;
+}
+.estimate-range-block::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+  opacity: 0.6;
+}
+
+/* Step card entrance animation */
+.wizard-step.active .step-card {
+  animation: cardEnter 0.28s ease both;
+}
+@keyframes cardEnter {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Mobile: tighten step-actions on small screens */
+@media (max-width: 420px) {
+  .step-actions {
+    flex-direction: column-reverse;
+  }
+  .step-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
