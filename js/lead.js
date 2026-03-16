@@ -1,6 +1,7 @@
 /* ==========================================================
    AMERIDEX ESTIMATOR - Lead Capture
-   Submits the lead form + estimate data to Formspree.
+   v6: Added board_count + lin_ft to payload,
+       redirect to thankyou.html on successful submission.
    Formspree endpoint: https://formspree.io/f/xlgpprpv
    ========================================================== */
 
@@ -8,26 +9,19 @@
   'use strict';
 
   const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xlgpprpv';
+  const THANKYOU_URL       = 'thankyou.html';
 
   /* ---- HELPERS ---- */
   function setLoading(isLoading) {
     const btn = document.getElementById('lead-submit');
     if (!btn) return;
     if (isLoading) {
-      btn.disabled = true;
+      btn.disabled    = true;
       btn.textContent = 'Sending\u2026';
     } else {
-      btn.disabled = false;
+      btn.disabled    = false;
       btn.textContent = 'Send My Estimate';
     }
-  }
-
-  function showSuccess() {
-    const form    = document.getElementById('lead-form');
-    const success = document.getElementById('lead-success');
-    if (form)    form.style.display    = 'none';
-    if (success) success.style.display = 'block';
-    success.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
   function showToast(msg) {
@@ -68,10 +62,13 @@
       estimate_range:  '$' + Math.round(est.totalLow  || 0).toLocaleString() +
                        ' - $' + Math.round(est.totalHigh || 0).toLocaleString(),
       square_footage:  (est.sqFt || 0) + ' sq ft',
-      board_style:     est.boardStyle  || '',
-      color:           est.color       || '',
+      board_style:     est.boardStyle   || '',
+      color:           est.color        || '',
       include_framing: est.includeFraming ? 'Yes' : 'No',
       accessories:     accessories.length ? accessories.join(', ') : 'None',
+      board_count:     (est.boardCount  || 0) + ' boards',
+      linear_footage:  (est.linFt       || 0) + ' lin ft',
+      waste_factor:    '10%',
       line_items:      lineText,
 
       /* Meta */
@@ -93,17 +90,27 @@
     setLoading(true);
 
     fetch(FORMSPREE_ENDPOINT, {
-      method: 'POST',
+      method:  'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        'Accept':       'application/json'
       },
       body: JSON.stringify(payload)
     })
     .then(function (res) {
       setLoading(false);
       if (res.ok) {
-        showSuccess();
+        /* Encode the estimate range into the redirect URL so
+           thankyou.html can personalise the confirmation message */
+        const low  = Math.round((window.ameridexEstimate || {}).totalLow  || 0);
+        const high = Math.round((window.ameridexEstimate || {}).totalHigh || 0);
+        const name = encodeURIComponent(
+          (document.getElementById('lead-name') || {}).value || ''
+        );
+        window.location.href = THANKYOU_URL +
+          '?low='  + low  +
+          '&high=' + high +
+          '&name=' + name;
       } else {
         return res.json().then(function (data) {
           throw new Error((data && data.error) || 'Submission failed.');

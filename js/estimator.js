@@ -1,12 +1,18 @@
 /* ==========================================================
    AMERIDEX ESTIMATOR - Wizard Engine & Live Calculator
-   Handles: step navigation, progress bar, live sq ft calc,
-   board style card rendering, color swatch rendering,
-   estimate calculation, and summary population.
+   v6: Added 10% industry-standard waste factor to board
+       quantity, board count and linear footage output lines
+       on the estimate display, and window.ameridexEstimate
+       board_count / lin_ft fields for print.js and lead.js.
    ========================================================== */
 
 (function () {
   'use strict';
+
+  /* ---------- CONSTANTS ---------- */
+  const WASTE_FACTOR   = 1.10;   // 10% overage — industry standard
+  const BOARD_WIDTH_FT = 1.0;    // AmeriDex standard board face width = 1 ft (5.5" net)
+  const BOARD_LEN_FT   = 16;     // Default board length offered (12 or 16 ft; use 16)
 
   /* ---------- STATE ---------- */
   const state = {
@@ -38,6 +44,19 @@
     setTimeout(function () { t.classList.remove('show'); }, duration || 2800);
   }
 
+  /* ---------- BOARD QUANTITY HELPERS ---------- */
+  // Returns number of boards needed given sq ft, waste factor, board dims
+  function calcBoardCount(sqFt) {
+    const adjustedSqFt = sqFt * WASTE_FACTOR;
+    // boards = (adjusted sq ft) / (board face width * board length)
+    return Math.ceil(adjustedSqFt / (BOARD_WIDTH_FT * BOARD_LEN_FT));
+  }
+
+  // Total linear feet of decking needed (with waste)
+  function calcLinFt(sqFt) {
+    return Math.ceil(sqFt * WASTE_FACTOR / BOARD_WIDTH_FT);
+  }
+
   /* ---------- PROGRESS BAR ---------- */
   function updateProgress(step) {
     const stepEls = document.querySelectorAll('.progress-step');
@@ -56,36 +75,24 @@
   /* ---------- STEP NAVIGATION ---------- */
   function goTo(step) {
     if (step < 1 || step > state.totalSteps) return;
-
-    // Validate before advancing
     if (step > state.currentStep) {
       if (!validateStep(state.currentStep)) return;
     }
-
-    // Sync state from DOM before leaving a step
     syncStateFromDOM(state.currentStep);
-
-    // Hide all steps
     document.querySelectorAll('.wizard-step').forEach(function (el) {
       el.classList.remove('active');
     });
-
-    // Show target step
     const target = document.getElementById('step-' + step);
     if (target) {
       target.classList.add('active');
       target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-
     state.currentStep = step;
     updateProgress(step);
-
-    // Build estimate when arriving at step 5
     if (step === 5) buildEstimate();
   }
 
   function restart() {
-    // Reset state
     state.sqFt = 0;
     state.boardStyleId = null;
     state.colorId = null;
@@ -93,12 +100,12 @@
     state.accessories = { railings: false, fascia: false, fasteners: false, stairs: false };
     state.railingLf = 0;
 
-    // Reset DOM inputs
     const lenEl = document.getElementById('deck-length');
     const widEl = document.getElementById('deck-width');
     if (lenEl) lenEl.value = '';
     if (widEl) widEl.value = '';
-    document.getElementById('sqft-value').textContent = '--';
+    const sqftEl = document.getElementById('sqft-value');
+    if (sqftEl) sqftEl.textContent = '--';
 
     document.querySelectorAll('.product-card').forEach(function (c) { c.classList.remove('selected'); });
     document.querySelectorAll('.swatch-item').forEach(function (s) { s.classList.remove('selected'); });
@@ -114,12 +121,12 @@
     const railRow = document.getElementById('railing-row');
     if (railRow) railRow.style.display = 'none';
 
-    // Reset lead form
     const leadForm = document.getElementById('lead-form');
     if (leadForm) { leadForm.reset(); leadForm.style.display = ''; }
     const leadSuccess = document.getElementById('lead-success');
     if (leadSuccess) leadSuccess.style.display = 'none';
 
+    window.ameridexEstimate = null;
     goTo(1);
   }
 
@@ -147,7 +154,7 @@
 
     function setError(id, msg) {
       const el = document.getElementById(id);
-      if (el) { el.textContent = msg; }
+      if (el) el.textContent = msg;
       valid = false;
     }
     function clearError(id) {
@@ -159,20 +166,28 @@
       clearError('deck-length-error'); clearError('deck-width-error');
       const l = parseFloat(document.getElementById('deck-length').value);
       const w = parseFloat(document.getElementById('deck-width').value);
-      if (!l || l < 1) { setError('deck-length-error', 'Please enter a valid length.'); document.getElementById('deck-length').classList.add('error'); }
-      else { document.getElementById('deck-length').classList.remove('error'); }
-      if (!w || w < 1) { setError('deck-width-error', 'Please enter a valid width.'); document.getElementById('deck-width').classList.add('error'); }
-      else { document.getElementById('deck-width').classList.remove('error'); }
+      if (!l || l < 1) {
+        setError('deck-length-error', 'Please enter a valid length.');
+        document.getElementById('deck-length').classList.add('error');
+      } else {
+        document.getElementById('deck-length').classList.remove('error');
+      }
+      if (!w || w < 1) {
+        setError('deck-width-error', 'Please enter a valid width.');
+        document.getElementById('deck-width').classList.add('error');
+      } else {
+        document.getElementById('deck-width').classList.remove('error');
+      }
     }
 
     if (step === 2) {
       clearError('board-style-error');
-      if (!state.boardStyleId) { setError('board-style-error', 'Please select a board style to continue.'); }
+      if (!state.boardStyleId) setError('board-style-error', 'Please select a board style to continue.');
     }
 
     if (step === 3) {
       clearError('color-error');
-      if (!state.colorId) { setError('color-error', 'Please choose a color to continue.'); }
+      if (!state.colorId) setError('color-error', 'Please choose a color to continue.');
     }
 
     if (!valid) showToast('Please complete this step before continuing.');
@@ -253,8 +268,8 @@
 
   /* ---------- LIVE SQ FT CALCULATION ---------- */
   function initDimensionListeners() {
-    const lenEl = document.getElementById('deck-length');
-    const widEl = document.getElementById('deck-width');
+    const lenEl  = document.getElementById('deck-length');
+    const widEl  = document.getElementById('deck-width');
     const sqftEl = document.getElementById('sqft-value');
 
     function update() {
@@ -285,22 +300,33 @@
 
   /* ---------- ESTIMATE CALCULATION ---------- */
   function calcEstimate() {
-    const P   = AMERIDEX_PRODUCTS;
+    const P    = AMERIDEX_PRODUCTS;
     const sqFt = state.sqFt;
     const lines = [];
     let totalLow = 0, totalHigh = 0;
 
-    // Board decking
+    // Board decking — apply waste factor to quantity, price stays on net sq ft
     const style = P.boardStyles.find(function (s) { return s.id === state.boardStyleId; });
     if (style && sqFt > 0) {
-      const low  = sqFt * style.pricePerSqFt.low;
-      const high = sqFt * style.pricePerSqFt.high;
-      lines.push({ label: style.label + ' decking (' + sqFt.toLocaleString() + ' sq ft)', low: low, high: high });
+      const boardCount = calcBoardCount(sqFt);
+      const linFt      = calcLinFt(sqFt);
+      const adjSqFt    = sqFt * WASTE_FACTOR;        // pricing on adjusted area
+      const low        = adjSqFt * style.pricePerSqFt.low;
+      const high       = adjSqFt * style.pricePerSqFt.high;
+      lines.push({
+        label: style.label + ' decking (' +
+               sqFt.toLocaleString() + ' sq ft + 10% waste = ' +
+               Math.round(adjSqFt).toLocaleString() + ' sq ft)',
+        low: low,
+        high: high,
+        boardCount: boardCount,
+        linFt: linFt
+      });
       totalLow  += low;
       totalHigh += high;
     }
 
-    // Framing
+    // Framing — no waste factor on structural material
     if (state.includeFraming && sqFt > 0) {
       const low  = sqFt * P.framing.pricePerSqFt.low;
       const high = sqFt * P.framing.pricePerSqFt.high;
@@ -319,16 +345,17 @@
       totalHigh += high;
     }
 
-    // Fascia
+    // Fascia — waste factor applied (perimeter boards cut to fit)
     if (state.accessories.fascia && sqFt > 0) {
-      const low  = sqFt * P.accessories.fascia.pricePerSqFt.low;
-      const high = sqFt * P.accessories.fascia.pricePerSqFt.high;
+      const adjSqFt = sqFt * WASTE_FACTOR;
+      const low  = adjSqFt * P.accessories.fascia.pricePerSqFt.low;
+      const high = adjSqFt * P.accessories.fascia.pricePerSqFt.high;
       lines.push({ label: P.accessories.fascia.label, low: low, high: high });
       totalLow  += low;
       totalHigh += high;
     }
 
-    // Hidden fasteners
+    // Hidden fasteners — no waste factor (clips are sold in exact qty kits)
     if (state.accessories.fasteners && sqFt > 0) {
       const low  = sqFt * P.accessories.fasteners.pricePerSqFt.low;
       const high = sqFt * P.accessories.fasteners.pricePerSqFt.high;
@@ -337,7 +364,7 @@
       totalHigh += high;
     }
 
-    // Stairs
+    // Stairs — flat rate, no area dependency
     if (state.accessories.stairs) {
       const low  = P.accessories.stairs.flatRate.low;
       const high = P.accessories.stairs.flatRate.high;
@@ -353,6 +380,7 @@
   function buildEstimate() {
     syncStateFromDOM(4);
     const result = calcEstimate();
+    const P      = AMERIDEX_PRODUCTS;
 
     // Range display
     document.getElementById('est-low').textContent  = fmt(result.totalLow);
@@ -369,19 +397,36 @@
         '<td>' + fmt(line.high) + '</td>';
       tbody.appendChild(tr);
     });
+
+    // Board count / LF info row — shown only when decking line exists
+    const deckLine = result.lines.find(function (l) { return l.boardCount; });
+    if (deckLine) {
+      const infoRow = document.createElement('tr');
+      infoRow.className = 'breakdown-info-row';
+      infoRow.innerHTML =
+        '<td colspan="3" class="breakdown-board-count">' +
+        '&#9432; Estimated boards needed: <strong>' + deckLine.boardCount + ' boards</strong>' +
+        ' &nbsp;&bull;&nbsp; ' +
+        '<strong>' + deckLine.linFt.toLocaleString() + ' lin ft</strong>' +
+        ' of ' + BOARD_LEN_FT + '-ft boards (includes 10% waste)' +
+        '</td>';
+      tbody.appendChild(infoRow);
+    }
+
     // Totals row
     const totRow = document.createElement('tr');
+    totRow.className = 'breakdown-total-row';
     totRow.innerHTML =
-      '<td>Total Estimate</td>' +
-      '<td>' + fmt(result.totalLow) + '</td>' +
-      '<td>' + fmt(result.totalHigh) + '</td>';
+      '<td><strong>Total Estimate</strong></td>' +
+      '<td><strong>' + fmt(result.totalLow)  + '</strong></td>' +
+      '<td><strong>' + fmt(result.totalHigh) + '</strong></td>';
     tbody.appendChild(totRow);
 
     // Selections pills
     const selList = document.getElementById('selections-list');
     selList.innerHTML = '';
-    const style = AMERIDEX_PRODUCTS.boardStyles.find(function (s) { return s.id === state.boardStyleId; });
-    const color = AMERIDEX_PRODUCTS.colors.find(function (c) { return c.id === state.colorId; });
+    const style = P.boardStyles.find(function (s) { return s.id === state.boardStyleId; });
+    const color = P.colors.find(function (c) { return c.id === state.colorId; });
 
     const pills = [
       state.sqFt > 0 ? state.sqFt.toLocaleString() + ' sq ft' : null,
@@ -400,16 +445,23 @@
       selList.appendChild(li);
     });
 
-    // Store estimate on window for lead.js to include in submission
+    // Board count for print / lead
+    const boardCount = deckLine ? deckLine.boardCount : 0;
+    const linFt      = deckLine ? deckLine.linFt : 0;
+
+    // Expose on window for lead.js and print.js
     window.ameridexEstimate = {
-      sqFt: state.sqFt,
-      boardStyle: style ? style.label : '',
-      color: color ? color.label : '',
+      sqFt:          state.sqFt,
+      boardStyle:    style ? style.label : '',
+      color:         color ? color.label : '',
       includeFraming: state.includeFraming,
-      accessories: Object.assign({}, state.accessories),
-      totalLow: result.totalLow,
-      totalHigh: result.totalHigh,
-      lines: result.lines
+      accessories:   Object.assign({}, state.accessories),
+      totalLow:      result.totalLow,
+      totalHigh:     result.totalHigh,
+      lines:         result.lines,
+      boardCount:    boardCount,
+      linFt:         linFt,
+      wasteFactor:   WASTE_FACTOR
     };
   }
 

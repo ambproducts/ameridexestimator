@@ -3,93 +3,139 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Estimate Sent - AmeriDex</title>
+  <meta name="robots" content="noindex" />
+  <title>Estimate Sent &mdash; AmeriDex</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
   <style>
-    .ty-wrap {
-      max-width: 580px;
-      margin: 4rem auto;
-      padding: 0 1.5rem;
+    /* ---- Page-specific overrides ---- */
+    .ty-wrapper {
+      min-height: calc(100vh - 140px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+    }
+    .ty-card {
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 4px 32px rgba(27,47,107,.13);
+      max-width: 600px;
+      width: 100%;
+      padding: 48px 44px;
       text-align: center;
     }
-    .ty-icon {
-      width: 72px; height: 72px;
-      background: var(--color-success);
-      color: white;
+    .ty-check {
+      width: 72px;
+      height: 72px;
       border-radius: 50%;
+      background: #1B2F6B;
+      color: #ffffff;
       font-size: 2rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 1.25rem;
+      margin: 0 auto 24px;
+      animation: popIn .45s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    @keyframes popIn {
+      from { transform: scale(0); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
     }
     .ty-title {
-      font-family: var(--font-head);
-      font-size: 2rem;
+      font-family: 'Montserrat', sans-serif;
       font-weight: 800;
-      color: var(--color-primary);
-      margin-bottom: 0.6rem;
+      font-size: 1.75rem;
+      color: #1B2F6B;
+      margin-bottom: 12px;
     }
     .ty-sub {
       font-size: 1rem;
-      color: var(--color-text-muted);
-      margin-bottom: 2rem;
-      line-height: 1.7;
+      color: #4a5568;
+      line-height: 1.65;
+      margin-bottom: 28px;
     }
-    .ty-steps {
-      background: var(--color-surface-alt);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      padding: 1.5rem;
-      text-align: left;
-      margin-bottom: 2rem;
+    .ty-range-block {
+      background: #F5F7FA;
+      border: 1px solid #D8DEE9;
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-bottom: 32px;
     }
-    .ty-steps-title {
-      font-family: var(--font-head);
-      font-size: 0.78rem;
+    .ty-range-label {
+      font-size: 10px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--color-text-muted);
-      margin-bottom: 0.85rem;
+      letter-spacing: 1.4px;
+      color: #C8102E;
+      margin-bottom: 8px;
     }
-    .ty-step-item {
+    .ty-range-values {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 1.6rem;
+      color: #1B2F6B;
+    }
+    .ty-range-values .sep {
+      font-weight: 400;
+      color: #9aa5b4;
+      margin: 0 8px;
+      font-size: 1.2rem;
+    }
+    .ty-next-steps {
+      text-align: left;
+      margin-bottom: 32px;
+    }
+    .ty-next-steps h3 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #6b7a90;
+      margin-bottom: 14px;
+    }
+    .ty-steps-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .ty-steps-list li {
       display: flex;
       align-items: flex-start;
-      gap: 0.85rem;
-      margin-bottom: 0.85rem;
-    }
-    .ty-step-item:last-child { margin-bottom: 0; }
-    .ty-step-num {
-      width: 26px; height: 26px;
-      background: var(--color-primary);
-      color: white;
-      border-radius: 50%;
-      font-family: var(--font-head);
-      font-size: 0.78rem;
-      font-weight: 700;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
-    .ty-step-text {
-      font-size: 0.9rem;
-      color: var(--color-text);
+      gap: 14px;
+      margin-bottom: 14px;
+      font-size: 0.95rem;
+      color: #1C2B3A;
       line-height: 1.5;
     }
-    .ty-step-text strong {
-      font-family: var(--font-head);
+    .ty-steps-list li:last-child { margin-bottom: 0; }
+    .ty-step-num {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #1B2F6B;
+      color: #ffffff;
+      font-size: 0.75rem;
       font-weight: 700;
-      color: var(--color-primary);
-      display: block;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1px;
     }
     .ty-actions {
       display: flex;
-      gap: 0.75rem;
+      gap: 12px;
       justify-content: center;
       flex-wrap: wrap;
+    }
+    @media (max-width: 480px) {
+      .ty-card { padding: 32px 24px; }
+      .ty-title { font-size: 1.4rem; }
+      .ty-range-values { font-size: 1.3rem; }
     }
   </style>
 </head>
@@ -108,45 +154,52 @@
     </div>
   </header>
 
-  <main>
-    <div class="ty-wrap">
+  <div class="ty-wrapper">
+    <div class="ty-card">
 
-      <div class="ty-icon">&#10003;</div>
-      <h1 class="ty-title">Your estimate is on its way!</h1>
-      <p class="ty-sub">We received your deck design. Check your inbox for your AmeriDex estimate. A local authorized dealer will follow up within 1 business day to answer questions and provide a firm quote.</p>
+      <div class="ty-check">&#10003;</div>
 
-      <div class="ty-steps">
-        <p class="ty-steps-title">What happens next</p>
-        <div class="ty-step-item">
-          <div class="ty-step-num">1</div>
-          <div class="ty-step-text">
-            <strong>Check your email</strong>
-            Your estimate summary has been sent to the address you provided.
-          </div>
+      <h1 class="ty-title" id="ty-title">Your Estimate Is On Its Way</h1>
+      <p class="ty-sub" id="ty-sub">
+        We&rsquo;ve received your request and will email you your estimate shortly.
+        A local AmeriDex dealer will follow up within <strong>1 business day</strong> with a firm quote.
+      </p>
+
+      <!-- Estimate range recap (populated from URL params) -->
+      <div class="ty-range-block" id="ty-range-block" style="display:none;">
+        <div class="ty-range-label">Your Estimated Material Range</div>
+        <div class="ty-range-values">
+          <span id="ty-low"></span>
+          <span class="sep">to</span>
+          <span id="ty-high"></span>
         </div>
-        <div class="ty-step-item">
-          <div class="ty-step-num">2</div>
-          <div class="ty-step-text">
-            <strong>Dealer follow-up</strong>
-            An authorized AmeriDex dealer in your area will reach out within 1 business day to discuss your project.
-          </div>
-        </div>
-        <div class="ty-step-item">
-          <div class="ty-step-num">3</div>
-          <div class="ty-step-text">
-            <strong>Get a firm quote</strong>
-            Your dealer will review your design choices and provide a precise, itemized material quote.
-          </div>
-        </div>
+      </div>
+
+      <div class="ty-next-steps">
+        <h3>What happens next</h3>
+        <ul class="ty-steps-list">
+          <li>
+            <span class="ty-step-num">1</span>
+            <span>Check your inbox &mdash; your estimate summary will arrive within a few minutes. Check your spam folder if you don&rsquo;t see it.</span>
+          </li>
+          <li>
+            <span class="ty-step-num">2</span>
+            <span>An authorized AmeriDex dealer near you will reach out within 1 business day to discuss your project and provide a firm quote.</span>
+          </li>
+          <li>
+            <span class="ty-step-num">3</span>
+            <span>Have questions now? Email us at <a href="mailto:sales@ameridex.com" style="color:#C8102E;font-weight:600;">sales@ameridex.com</a> and we&rsquo;ll get back to you promptly.</span>
+          </li>
+        </ul>
       </div>
 
       <div class="ty-actions">
-        <a href="index.html" class="btn btn-primary">Start a New Estimate</a>
-        <a href="https://www.ameridex.com" class="btn btn-ghost" target="_blank" rel="noopener">Visit AmeriDex.com</a>
+        <a href="index.html" class="btn btn-ghost">&#8592; Start a New Estimate</a>
+        <a href="https://www.ameridex.com" class="btn btn-primary" target="_blank" rel="noopener">Visit AmeriDex.com &rarr;</a>
       </div>
 
     </div>
-  </main>
+  </div>
 
   <!-- FOOTER -->
   <footer class="site-footer">
@@ -159,6 +212,34 @@
     </div>
   </footer>
 
-  <script>document.getElementById('footer-year').textContent = new Date().getFullYear();</script>
+  <script>
+    /* Personalise the page from URL query params set by lead.js */
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var low    = parseInt(params.get('low'),  10);
+      var high   = parseInt(params.get('high'), 10);
+      var name   = params.get('name') || '';
+
+      /* Personalise greeting */
+      if (name.trim()) {
+        var title = document.getElementById('ty-title');
+        var sub   = document.getElementById('ty-sub');
+        if (title) title.textContent = 'Thanks, ' + name.split(' ')[0] + '! Your Estimate Is On Its Way';
+      }
+
+      /* Show range block if valid numbers came through */
+      if (!isNaN(low) && !isNaN(high) && low > 0 && high > 0) {
+        var block  = document.getElementById('ty-range-block');
+        var lowEl  = document.getElementById('ty-low');
+        var highEl = document.getElementById('ty-high');
+        if (block)  block.style.display  = 'block';
+        if (lowEl)  lowEl.textContent    = '$' + low.toLocaleString('en-US');
+        if (highEl) highEl.textContent   = '$' + high.toLocaleString('en-US');
+      }
+
+      document.getElementById('footer-year').textContent = new Date().getFullYear();
+    }());
+  </script>
+
 </body>
 </html>
