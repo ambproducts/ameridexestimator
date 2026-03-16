@@ -13,6 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/swatches.css" />
+  <link rel="stylesheet" href="css/print.css" />
 </head>
 <body>
 
@@ -273,6 +274,7 @@
         </div>
         <div class="step-actions">
           <button class="btn btn-ghost" id="step5-back">&larr; Edit selections</button>
+          <button class="btn btn-ghost" id="btn-print-estimate" aria-label="Print or save estimate as PDF">&#128438; Print / Save PDF</button>
           <button class="btn btn-ghost" id="step5-restart">Start Over</button>
         </div>
       </div>
@@ -297,6 +299,7 @@
   <script src="js/estimator.js"></script>
   <script src="js/validation.js"></script>
   <script src="js/lead.js"></script>
+  <script src="js/print.js"></script>
   <script>document.getElementById('footer-year').textContent = new Date().getFullYear();</script>
 </body>
 </html>
