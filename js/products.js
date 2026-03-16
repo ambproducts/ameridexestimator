@@ -44,7 +44,7 @@ const AMERIDEX_PRODUCTS = {
       id: 'standard',
       label: 'Standard Field',
       icon: '&#9776;',
-      detail: 'Full grooved board field with DexerDry drainage mat pressed in. Mounted with face screws. Most common layout.',
+      detail: 'Full grooved board field with DexerDry coil pressed in. Mounted with face screws. Most common layout.',
       hasBorder: false,
       hasBreaker: false
     },
