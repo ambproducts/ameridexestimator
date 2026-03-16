@@ -2,22 +2,21 @@
    AMERIDEX ESTIMATOR - Wizard Engine & Live Calculator
 
    AmeriDex is a GROOVED BOARD system.
-   Step 2 asks for deck layout pattern — not board type.
+   Step 2 asks for deck layout pattern -- not board type.
    Patterns determine how much solid board (border/breaker)
    is added on top of the grooved field calculation.
 
-   Waste factor applied to grooved field sq ft.
-   Solid border/breaker calculated from deck perimeter
-   and width estimates derived from sq ft.
+   All board pricing is in LINEAR FEET (lin ft).
+   sq ft deck area is converted to lin ft via board coverage.
    ========================================================== */
 
 (function () {
   'use strict';
 
   /* ---------- CONSTANTS ---------- */
-  const WASTE_FACTOR    = 1.10;  // 10% overage — industry standard
-  const BOARD_WIDTH_FT  = 1.0;   // AmeriDex standard board face = 1 ft (5.5" net)
-  const BOARD_LEN_FT    = 16;    // Default length offered
+  const WASTE_FACTOR   = 1.10;  // 10% overage -- industry standard
+  const COVERAGE_FT    = 5.625 / 12; // 5.5" face + 1/8" gap = 0.46875 ft per board run
+  const BOARD_LEN_FT   = 16;   // Standard AmeriDex board length
 
   /* ---------- STATE ---------- */
   const state = {
@@ -32,7 +31,6 @@
     accessories: {
       railings: false,
       fascia: false,
-      fasteners: false,
       stairs: false
     },
     railingLf: 0
@@ -51,33 +49,32 @@
     setTimeout(function () { t.classList.remove('show'); }, duration || 2800);
   }
 
-  /* ---------- BOARD QUANTITY HELPERS ---------- */
-  function calcBoardCount(sqFt) {
-    const adjusted = sqFt * WASTE_FACTOR;
-    return Math.ceil(adjusted / (BOARD_WIDTH_FT * BOARD_LEN_FT));
+  /* ---------- BOARD QUANTITY HELPERS ----------
+   * sqFtToLinFt: converts deck sq ft to lin ft of board needed
+   *   formula: sq ft / coverage per board run (ft) = lin ft of runs
+   *   each run is deckLength ft long, so:
+   *   lin ft = (sqFt / COVERAGE_FT) -- this gives total linear footage
+   *   Then apply waste factor.
+   */
+  function sqFtToLinFt(sqFt) {
+    return Math.ceil((sqFt / COVERAGE_FT) * WASTE_FACTOR);
   }
 
-  function calcLinFt(sqFt) {
-    return Math.ceil(sqFt * WASTE_FACTOR / BOARD_WIDTH_FT);
+  function linFtToBoardCount(linFt) {
+    return Math.ceil(linFt / BOARD_LEN_FT);
   }
 
   /*
-   * Estimate perimeter and breaker run from dimensions.
-   * Uses actual length/width when available; falls back to
-   * square-root approximation for irregular shapes.
+   * Solid border / breaker lin ft.
+   * Picture frame: 2x perimeter (one board each side of every edge).
+   * Breaker board: one run across the deck width.
    */
   function calcSolidLinFt(pattern) {
     const len = state.deckLength || Math.sqrt(state.sqFt);
     const wid = state.deckWidth  || Math.sqrt(state.sqFt);
     let linFt = 0;
-    if (pattern.hasBorder) {
-      // 2 passes of perimeter (both sides of each edge get a border board)
-      linFt += 2 * (len + wid);
-    }
-    if (pattern.hasBreaker) {
-      // One solid board stripe across the width of the deck
-      linFt += wid;
-    }
+    if (pattern.hasBorder)  linFt += 2 * (len + wid);
+    if (pattern.hasBreaker) linFt += wid;
     return Math.ceil(linFt * WASTE_FACTOR);
   }
 
@@ -123,7 +120,7 @@
     state.layoutPatternId = null;
     state.colorId = null;
     state.includeFraming = false;
-    state.accessories = { railings: false, fascia: false, fasteners: false, stairs: false };
+    state.accessories = { railings: false, fascia: false, stairs: false };
     state.railingLf = 0;
 
     const lenEl  = document.getElementById('deck-length');
@@ -144,7 +141,7 @@
 
     const framingEl = document.getElementById('include-framing');
     if (framingEl) framingEl.checked = false;
-    ['add-railings','add-fascia','add-fasteners','add-stairs'].forEach(function (id) {
+    ['add-railings', 'add-fascia', 'add-stairs'].forEach(function (id) {
       const el = document.getElementById(id);
       if (el) el.checked = false;
     });
@@ -173,10 +170,9 @@
     }
     if (step === 4) {
       state.includeFraming = document.getElementById('include-framing').checked;
-      state.accessories.railings  = document.getElementById('add-railings').checked;
-      state.accessories.fascia    = document.getElementById('add-fascia').checked;
-      state.accessories.fasteners = document.getElementById('add-fasteners').checked;
-      state.accessories.stairs    = document.getElementById('add-stairs').checked;
+      state.accessories.railings = document.getElementById('add-railings').checked;
+      state.accessories.fascia   = document.getElementById('add-fascia').checked;
+      state.accessories.stairs   = document.getElementById('add-stairs').checked;
       state.railingLf = parseFloat(document.getElementById('railing-lf').value) ||
         AMERIDEX_PRODUCTS.accessories.railings.defaultLinFt;
     }
@@ -247,7 +243,6 @@
       card.setAttribute('tabindex', '0');
       card.dataset.patternId = pattern.id;
 
-      // Badge for patterns that use solid accent boards
       var badge = '';
       if (pattern.hasBorder || pattern.hasBreaker) {
         badge = '<div class="product-card-badge">Includes solid accent boards</div>';
@@ -314,7 +309,7 @@
     });
   }
 
-  /* ---------- LIVE SQ FT CALCULATION ---------- */
+  /* ---------- LIVE SQ FT / LIN FT DISPLAY ---------- */
   function initDimensionListeners() {
     const lenEl  = document.getElementById('deck-length');
     const widEl  = document.getElementById('deck-width');
@@ -324,8 +319,9 @@
       const l = parseFloat(lenEl.value) || 0;
       const w = parseFloat(widEl.value) || 0;
       if (l > 0 && w > 0) {
-        const sqft = l * w;
-        sqftEl.textContent = sqft.toLocaleString('en-US') + ' sq ft';
+        const sqft  = l * w;
+        const linFt = sqFtToLinFt(sqft);
+        sqftEl.textContent = sqft.toLocaleString('en-US') + ' sq ft (~' + linFt.toLocaleString('en-US') + ' lin ft of board)';
         state.sqFt       = sqft;
         state.deckLength = l;
         state.deckWidth  = w;
@@ -348,54 +344,59 @@
     });
   }
 
-  /* ---------- ESTIMATE CALCULATION ---------- */
+  /* ---------- ESTIMATE CALCULATION ----------
+   * ALL board pricing in lin ft.
+   * Grooved field:   linFt x retailPerLinFt
+   * Solid accent:    solidLinFt x retailPerLinFt
+   * Framing:         still per sq ft (subframe is area-based)
+   * Railings:        lin ft of perimeter
+   * Fascia:          lin ft of perimeter
+   * Stairs:          flat rate
+   */
   function calcEstimate() {
-    const P     = AMERIDEX_PRODUCTS;
-    const sqFt  = state.sqFt;
-    const lines = [];
+    const P      = AMERIDEX_PRODUCTS;
+    const sqFt   = state.sqFt;
+    const lines  = [];
     let totalLow = 0, totalHigh = 0;
 
     const pattern = P.layoutPatterns.find(function (p) { return p.id === state.layoutPatternId; });
 
-    // 1. Grooved field board (always — it IS the system)
+    // 1. Grooved field board -- priced per lin ft
     if (sqFt > 0) {
-      const adjSqFt    = sqFt * WASTE_FACTOR;
-      const boardCount = calcBoardCount(sqFt);
-      const linFt      = calcLinFt(sqFt);
-      const low        = adjSqFt * P.groovedBoard.pricePerSqFt.low;
-      const high       = adjSqFt * P.groovedBoard.pricePerSqFt.high;
+      const linFt      = sqFtToLinFt(sqFt);
+      const boardCount = linFtToBoardCount(linFt);
+      const low        = linFt * P.groovedBoard.retailPerLinFt;
+      const high       = low;  // single retail price; range comes from install/color tier
       lines.push({
-        label: 'Grooved Field Board (' +
-               sqFt.toLocaleString() + ' sq ft + 10% waste = ' +
-               Math.round(adjSqFt).toLocaleString() + ' sq ft)',
-        low: low,
-        high: high,
+        label: 'Grooved Field Board (' + linFt.toLocaleString() + ' lin ft incl. 10% waste)',
+        low:        low,
+        high:       high,
         boardCount: boardCount,
-        linFt: linFt
+        linFt:      linFt
       });
       totalLow  += low;
       totalHigh += high;
     }
 
-    // 2. Solid accent boards (border and/or breaker) — only when pattern requires
+    // 2. Solid accent boards (picture frame border and/or breaker board) -- priced per lin ft
     if (pattern && (pattern.hasBorder || pattern.hasBreaker) && sqFt > 0) {
-      const solidLf = calcSolidLinFt(pattern);
-      const low     = solidLf * P.solidBoard.pricePerLinFt.low;
-      const high    = solidLf * P.solidBoard.pricePerLinFt.high;
+      const solidLf  = calcSolidLinFt(pattern);
+      const low      = solidLf * P.solidBoard.retailPerLinFt;
+      const high     = low;
       var accentDesc = [];
       if (pattern.hasBorder)  accentDesc.push('picture frame border');
       if (pattern.hasBreaker) accentDesc.push('breaker board');
       lines.push({
-        label: 'Solid Accent Board — ' + accentDesc.join(' + ') +
-               ' (' + solidLf + ' lin ft est., incl. waste)',
-        low: low,
+        label: 'Solid Accent Board -- ' + accentDesc.join(' + ') +
+               ' (' + solidLf.toLocaleString() + ' lin ft incl. waste)',
+        low:  low,
         high: high
       });
       totalLow  += low;
       totalHigh += high;
     }
 
-    // 3. Framing
+    // 3. Framing -- area-based, stays in sq ft
     if (state.includeFraming && sqFt > 0) {
       const low  = sqFt * P.framing.pricePerSqFt.low;
       const high = sqFt * P.framing.pricePerSqFt.high;
@@ -404,7 +405,7 @@
       totalHigh += high;
     }
 
-    // 4. Railings
+    // 4. Railings -- lin ft
     if (state.accessories.railings) {
       const lf   = state.railingLf || P.accessories.railings.defaultLinFt;
       const low  = lf * P.accessories.railings.pricePerLinFt.low;
@@ -414,26 +415,19 @@
       totalHigh += high;
     }
 
-    // 5. Fascia
+    // 5. Fascia -- perimeter lin ft
     if (state.accessories.fascia && sqFt > 0) {
-      const adjSqFt = sqFt * WASTE_FACTOR;
-      const low  = adjSqFt * P.accessories.fascia.pricePerSqFt.low;
-      const high = adjSqFt * P.accessories.fascia.pricePerSqFt.high;
-      lines.push({ label: P.accessories.fascia.label, low: low, high: high });
+      const len    = state.deckLength || Math.sqrt(sqFt);
+      const wid    = state.deckWidth  || Math.sqrt(sqFt);
+      const perimLf = Math.ceil(2 * (len + wid) * WASTE_FACTOR);
+      const low  = perimLf * P.solidBoard.retailPerLinFt;
+      const high = low;
+      lines.push({ label: P.accessories.fascia.label + ' (' + perimLf + ' lin ft)', low: low, high: high });
       totalLow  += low;
       totalHigh += high;
     }
 
-    // 6. Hidden fastener clips
-    if (state.accessories.fasteners && sqFt > 0) {
-      const low  = sqFt * P.accessories.fasteners.pricePerSqFt.low;
-      const high = sqFt * P.accessories.fasteners.pricePerSqFt.high;
-      lines.push({ label: P.accessories.fasteners.label, low: low, high: high });
-      totalLow  += low;
-      totalHigh += high;
-    }
-
-    // 7. Stairs — flat rate
+    // 6. Stairs -- flat rate
     if (state.accessories.stairs) {
       const low  = P.accessories.stairs.flatRate.low;
       const high = P.accessories.stairs.flatRate.high;
@@ -474,10 +468,10 @@
       infoRow.className = 'breakdown-info-row';
       infoRow.innerHTML =
         '<td colspan="3" class="breakdown-board-count">' +
-        '&#9432; Grooved field boards needed: <strong>' + deckLine.boardCount + ' boards</strong>' +
+        '&#9432; Field boards needed: <strong>' + deckLine.boardCount + ' boards</strong>' +
         ' &nbsp;&bull;&nbsp; ' +
         '<strong>' + deckLine.linFt.toLocaleString() + ' lin ft</strong>' +
-        ' of ' + BOARD_LEN_FT + '-ft boards (includes 10% waste)' +
+        ' @ ' + BOARD_LEN_FT + ' ft/board (incl. 10% waste)' +
         '</td>';
       tbody.appendChild(infoRow);
     }
@@ -494,15 +488,16 @@
     // Selections pills
     const selList = document.getElementById('selections-list');
     selList.innerHTML = '';
+    const linFtField = deckLine ? deckLine.linFt : 0;
     const pills = [
-      state.sqFt > 0         ? state.sqFt.toLocaleString() + ' sq ft'     : null,
-      pattern                ? pattern.label                               : null,
-      color                  ? color.label                                 : null,
-      state.includeFraming   ? 'With Framing'                             : null,
-      state.accessories.railings   ? 'Railings'         : null,
-      state.accessories.fascia     ? 'Fascia'           : null,
-      state.accessories.fasteners  ? 'Hidden Fasteners' : null,
-      state.accessories.stairs     ? 'Stairs'           : null
+      state.sqFt > 0               ? state.sqFt.toLocaleString() + ' sq ft'       : null,
+      linFtField > 0               ? linFtField.toLocaleString() + ' lin ft field' : null,
+      pattern                      ? pattern.label                                 : null,
+      color                        ? color.label                                   : null,
+      state.includeFraming         ? 'With Framing'                               : null,
+      state.accessories.railings   ? 'Railings'                                   : null,
+      state.accessories.fascia     ? 'Fascia'                                     : null,
+      state.accessories.stairs     ? 'Stairs'                                     : null
     ].filter(Boolean);
 
     pills.forEach(function (text) {
