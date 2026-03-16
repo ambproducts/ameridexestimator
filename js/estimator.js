@@ -1,25 +1,32 @@
 /* ==========================================================
    AMERIDEX ESTIMATOR - Wizard Engine & Live Calculator
-   v6: Added 10% industry-standard waste factor to board
-       quantity, board count and linear footage output lines
-       on the estimate display, and window.ameridexEstimate
-       board_count / lin_ft fields for print.js and lead.js.
+
+   AmeriDex is a GROOVED BOARD system.
+   Step 2 asks for deck layout pattern — not board type.
+   Patterns determine how much solid board (border/breaker)
+   is added on top of the grooved field calculation.
+
+   Waste factor applied to grooved field sq ft.
+   Solid border/breaker calculated from deck perimeter
+   and width estimates derived from sq ft.
    ========================================================== */
 
 (function () {
   'use strict';
 
   /* ---------- CONSTANTS ---------- */
-  const WASTE_FACTOR   = 1.10;   // 10% overage — industry standard
-  const BOARD_WIDTH_FT = 1.0;    // AmeriDex standard board face width = 1 ft (5.5" net)
-  const BOARD_LEN_FT   = 16;     // Default board length offered (12 or 16 ft; use 16)
+  const WASTE_FACTOR    = 1.10;  // 10% overage — industry standard
+  const BOARD_WIDTH_FT  = 1.0;   // AmeriDex standard board face = 1 ft (5.5" net)
+  const BOARD_LEN_FT    = 16;    // Default length offered
 
   /* ---------- STATE ---------- */
   const state = {
     currentStep: 1,
     totalSteps: 5,
     sqFt: 0,
-    boardStyleId: null,
+    deckLength: 0,
+    deckWidth: 0,
+    layoutPatternId: null,
     colorId: null,
     includeFraming: false,
     accessories: {
@@ -45,21 +52,38 @@
   }
 
   /* ---------- BOARD QUANTITY HELPERS ---------- */
-  // Returns number of boards needed given sq ft, waste factor, board dims
   function calcBoardCount(sqFt) {
-    const adjustedSqFt = sqFt * WASTE_FACTOR;
-    // boards = (adjusted sq ft) / (board face width * board length)
-    return Math.ceil(adjustedSqFt / (BOARD_WIDTH_FT * BOARD_LEN_FT));
+    const adjusted = sqFt * WASTE_FACTOR;
+    return Math.ceil(adjusted / (BOARD_WIDTH_FT * BOARD_LEN_FT));
   }
 
-  // Total linear feet of decking needed (with waste)
   function calcLinFt(sqFt) {
     return Math.ceil(sqFt * WASTE_FACTOR / BOARD_WIDTH_FT);
   }
 
+  /*
+   * Estimate perimeter and breaker run from dimensions.
+   * Uses actual length/width when available; falls back to
+   * square-root approximation for irregular shapes.
+   */
+  function calcSolidLinFt(pattern) {
+    const len = state.deckLength || Math.sqrt(state.sqFt);
+    const wid = state.deckWidth  || Math.sqrt(state.sqFt);
+    let linFt = 0;
+    if (pattern.hasBorder) {
+      // 2 passes of perimeter (both sides of each edge get a border board)
+      linFt += 2 * (len + wid);
+    }
+    if (pattern.hasBreaker) {
+      // One solid board stripe across the width of the deck
+      linFt += wid;
+    }
+    return Math.ceil(linFt * WASTE_FACTOR);
+  }
+
   /* ---------- PROGRESS BAR ---------- */
   function updateProgress(step) {
-    const stepEls = document.querySelectorAll('.progress-step');
+    const stepEls    = document.querySelectorAll('.progress-step');
     const connectors = document.querySelectorAll('.progress-connector');
     stepEls.forEach(function (el, i) {
       const n = i + 1;
@@ -94,21 +118,29 @@
 
   function restart() {
     state.sqFt = 0;
-    state.boardStyleId = null;
+    state.deckLength = 0;
+    state.deckWidth  = 0;
+    state.layoutPatternId = null;
     state.colorId = null;
     state.includeFraming = false;
     state.accessories = { railings: false, fascia: false, fasteners: false, stairs: false };
     state.railingLf = 0;
 
-    const lenEl = document.getElementById('deck-length');
-    const widEl = document.getElementById('deck-width');
+    const lenEl  = document.getElementById('deck-length');
+    const widEl  = document.getElementById('deck-width');
     if (lenEl) lenEl.value = '';
     if (widEl) widEl.value = '';
     const sqftEl = document.getElementById('sqft-value');
     if (sqftEl) sqftEl.textContent = '--';
 
-    document.querySelectorAll('.product-card').forEach(function (c) { c.classList.remove('selected'); });
-    document.querySelectorAll('.swatch-item').forEach(function (s) { s.classList.remove('selected'); });
+    document.querySelectorAll('.product-card').forEach(function (c) {
+      c.classList.remove('selected');
+      c.setAttribute('aria-checked', 'false');
+    });
+    document.querySelectorAll('.swatch-item').forEach(function (s) {
+      s.classList.remove('selected');
+      s.setAttribute('aria-checked', 'false');
+    });
 
     const framingEl = document.getElementById('include-framing');
     if (framingEl) framingEl.checked = false;
@@ -116,12 +148,12 @@
       const el = document.getElementById(id);
       if (el) el.checked = false;
     });
-    const railLf = document.getElementById('railing-lf');
+    const railLf  = document.getElementById('railing-lf');
     if (railLf) railLf.value = '';
     const railRow = document.getElementById('railing-row');
     if (railRow) railRow.style.display = 'none';
 
-    const leadForm = document.getElementById('lead-form');
+    const leadForm    = document.getElementById('lead-form');
     if (leadForm) { leadForm.reset(); leadForm.style.display = ''; }
     const leadSuccess = document.getElementById('lead-success');
     if (leadSuccess) leadSuccess.style.display = 'none';
@@ -134,7 +166,9 @@
   function syncStateFromDOM(step) {
     if (step === 1) {
       const l = parseFloat(document.getElementById('deck-length').value) || 0;
-      const w = parseFloat(document.getElementById('deck-width').value) || 0;
+      const w = parseFloat(document.getElementById('deck-width').value)  || 0;
+      state.deckLength = l;
+      state.deckWidth  = w;
       state.sqFt = l * w;
     }
     if (step === 4) {
@@ -181,45 +215,59 @@
     }
 
     if (step === 2) {
-      clearError('board-style-error');
-      if (!state.boardStyleId) setError('board-style-error', 'Please select a board style to continue.');
+      clearError('layout-pattern-error');
+      if (!state.layoutPatternId) {
+        setError('layout-pattern-error', 'Please select a deck layout to continue.');
+        valid = false;
+      }
     }
 
     if (step === 3) {
       clearError('color-error');
-      if (!state.colorId) setError('color-error', 'Please choose a color to continue.');
+      if (!state.colorId) {
+        setError('color-error', 'Please choose a color to continue.');
+        valid = false;
+      }
     }
 
     if (!valid) showToast('Please complete this step before continuing.');
     return valid;
   }
 
-  /* ---------- RENDER BOARD STYLE CARDS ---------- */
-  function renderBoardStyles() {
-    const grid = document.getElementById('board-style-grid');
+  /* ---------- RENDER LAYOUT PATTERN CARDS ---------- */
+  function renderLayoutPatterns() {
+    const grid = document.getElementById('layout-pattern-grid');
     if (!grid) return;
     grid.innerHTML = '';
-    AMERIDEX_PRODUCTS.boardStyles.forEach(function (style) {
+    AMERIDEX_PRODUCTS.layoutPatterns.forEach(function (pattern) {
       const card = document.createElement('div');
       card.className = 'product-card';
       card.setAttribute('role', 'radio');
       card.setAttribute('aria-checked', 'false');
       card.setAttribute('tabindex', '0');
-      card.dataset.styleId = style.id;
+      card.dataset.patternId = pattern.id;
+
+      // Badge for patterns that use solid accent boards
+      var badge = '';
+      if (pattern.hasBorder || pattern.hasBreaker) {
+        badge = '<div class="product-card-badge">Includes solid accent boards</div>';
+      }
+
       card.innerHTML =
-        '<div class="product-card-icon">' + style.icon + '</div>' +
-        '<div class="product-card-name">' + style.label + '</div>' +
-        '<div class="product-card-detail">' + style.detail + '</div>';
+        '<div class="product-card-icon">' + pattern.icon + '</div>' +
+        '<div class="product-card-name">' + pattern.label + '</div>' +
+        '<div class="product-card-detail">' + pattern.detail + '</div>' +
+        badge;
 
       card.addEventListener('click', function () {
-        document.querySelectorAll('.product-card').forEach(function (c) {
+        document.querySelectorAll('#layout-pattern-grid .product-card').forEach(function (c) {
           c.classList.remove('selected');
           c.setAttribute('aria-checked', 'false');
         });
         card.classList.add('selected');
         card.setAttribute('aria-checked', 'true');
-        state.boardStyleId = style.id;
-        document.getElementById('board-style-error').textContent = '';
+        state.layoutPatternId = pattern.id;
+        document.getElementById('layout-pattern-error').textContent = '';
       });
 
       card.addEventListener('keydown', function (e) {
@@ -278,7 +326,9 @@
       if (l > 0 && w > 0) {
         const sqft = l * w;
         sqftEl.textContent = sqft.toLocaleString('en-US') + ' sq ft';
-        state.sqFt = sqft;
+        state.sqFt       = sqft;
+        state.deckLength = l;
+        state.deckWidth  = w;
       } else {
         sqftEl.textContent = '--';
       }
@@ -300,21 +350,22 @@
 
   /* ---------- ESTIMATE CALCULATION ---------- */
   function calcEstimate() {
-    const P    = AMERIDEX_PRODUCTS;
-    const sqFt = state.sqFt;
+    const P     = AMERIDEX_PRODUCTS;
+    const sqFt  = state.sqFt;
     const lines = [];
     let totalLow = 0, totalHigh = 0;
 
-    // Board decking — apply waste factor to quantity, price stays on net sq ft
-    const style = P.boardStyles.find(function (s) { return s.id === state.boardStyleId; });
-    if (style && sqFt > 0) {
+    const pattern = P.layoutPatterns.find(function (p) { return p.id === state.layoutPatternId; });
+
+    // 1. Grooved field board (always — it IS the system)
+    if (sqFt > 0) {
+      const adjSqFt    = sqFt * WASTE_FACTOR;
       const boardCount = calcBoardCount(sqFt);
       const linFt      = calcLinFt(sqFt);
-      const adjSqFt    = sqFt * WASTE_FACTOR;        // pricing on adjusted area
-      const low        = adjSqFt * style.pricePerSqFt.low;
-      const high       = adjSqFt * style.pricePerSqFt.high;
+      const low        = adjSqFt * P.groovedBoard.pricePerSqFt.low;
+      const high       = adjSqFt * P.groovedBoard.pricePerSqFt.high;
       lines.push({
-        label: style.label + ' decking (' +
+        label: 'Grooved Field Board (' +
                sqFt.toLocaleString() + ' sq ft + 10% waste = ' +
                Math.round(adjSqFt).toLocaleString() + ' sq ft)',
         low: low,
@@ -326,7 +377,25 @@
       totalHigh += high;
     }
 
-    // Framing — no waste factor on structural material
+    // 2. Solid accent boards (border and/or breaker) — only when pattern requires
+    if (pattern && (pattern.hasBorder || pattern.hasBreaker) && sqFt > 0) {
+      const solidLf = calcSolidLinFt(pattern);
+      const low     = solidLf * P.solidBoard.pricePerLinFt.low;
+      const high    = solidLf * P.solidBoard.pricePerLinFt.high;
+      var accentDesc = [];
+      if (pattern.hasBorder)  accentDesc.push('picture frame border');
+      if (pattern.hasBreaker) accentDesc.push('breaker board');
+      lines.push({
+        label: 'Solid Accent Board — ' + accentDesc.join(' + ') +
+               ' (' + solidLf + ' lin ft est., incl. waste)',
+        low: low,
+        high: high
+      });
+      totalLow  += low;
+      totalHigh += high;
+    }
+
+    // 3. Framing
     if (state.includeFraming && sqFt > 0) {
       const low  = sqFt * P.framing.pricePerSqFt.low;
       const high = sqFt * P.framing.pricePerSqFt.high;
@@ -335,7 +404,7 @@
       totalHigh += high;
     }
 
-    // Railings
+    // 4. Railings
     if (state.accessories.railings) {
       const lf   = state.railingLf || P.accessories.railings.defaultLinFt;
       const low  = lf * P.accessories.railings.pricePerLinFt.low;
@@ -345,7 +414,7 @@
       totalHigh += high;
     }
 
-    // Fascia — waste factor applied (perimeter boards cut to fit)
+    // 5. Fascia
     if (state.accessories.fascia && sqFt > 0) {
       const adjSqFt = sqFt * WASTE_FACTOR;
       const low  = adjSqFt * P.accessories.fascia.pricePerSqFt.low;
@@ -355,7 +424,7 @@
       totalHigh += high;
     }
 
-    // Hidden fasteners — no waste factor (clips are sold in exact qty kits)
+    // 6. Hidden fastener clips
     if (state.accessories.fasteners && sqFt > 0) {
       const low  = sqFt * P.accessories.fasteners.pricePerSqFt.low;
       const high = sqFt * P.accessories.fasteners.pricePerSqFt.high;
@@ -364,7 +433,7 @@
       totalHigh += high;
     }
 
-    // Stairs — flat rate, no area dependency
+    // 7. Stairs — flat rate
     if (state.accessories.stairs) {
       const low  = P.accessories.stairs.flatRate.low;
       const high = P.accessories.stairs.flatRate.high;
@@ -379,14 +448,14 @@
   /* ---------- BUILD ESTIMATE DISPLAY ---------- */
   function buildEstimate() {
     syncStateFromDOM(4);
-    const result = calcEstimate();
-    const P      = AMERIDEX_PRODUCTS;
+    const result  = calcEstimate();
+    const P       = AMERIDEX_PRODUCTS;
+    const pattern = P.layoutPatterns.find(function (p) { return p.id === state.layoutPatternId; });
+    const color   = P.colors.find(function (c) { return c.id === state.colorId; });
 
-    // Range display
     document.getElementById('est-low').textContent  = fmt(result.totalLow);
     document.getElementById('est-high').textContent = fmt(result.totalHigh);
 
-    // Breakdown table
     const tbody = document.getElementById('breakdown-tbody');
     tbody.innerHTML = '';
     result.lines.forEach(function (line) {
@@ -398,14 +467,14 @@
       tbody.appendChild(tr);
     });
 
-    // Board count / LF info row — shown only when decking line exists
+    // Board count info row
     const deckLine = result.lines.find(function (l) { return l.boardCount; });
     if (deckLine) {
       const infoRow = document.createElement('tr');
       infoRow.className = 'breakdown-info-row';
       infoRow.innerHTML =
         '<td colspan="3" class="breakdown-board-count">' +
-        '&#9432; Estimated boards needed: <strong>' + deckLine.boardCount + ' boards</strong>' +
+        '&#9432; Grooved field boards needed: <strong>' + deckLine.boardCount + ' boards</strong>' +
         ' &nbsp;&bull;&nbsp; ' +
         '<strong>' + deckLine.linFt.toLocaleString() + ' lin ft</strong>' +
         ' of ' + BOARD_LEN_FT + '-ft boards (includes 10% waste)' +
@@ -425,18 +494,15 @@
     // Selections pills
     const selList = document.getElementById('selections-list');
     selList.innerHTML = '';
-    const style = P.boardStyles.find(function (s) { return s.id === state.boardStyleId; });
-    const color = P.colors.find(function (c) { return c.id === state.colorId; });
-
     const pills = [
-      state.sqFt > 0 ? state.sqFt.toLocaleString() + ' sq ft' : null,
-      style ? style.label : null,
-      color ? color.label : null,
-      state.includeFraming ? 'With Framing' : null,
-      state.accessories.railings  ? 'Railings' : null,
-      state.accessories.fascia    ? 'Fascia' : null,
-      state.accessories.fasteners ? 'Hidden Fasteners' : null,
-      state.accessories.stairs    ? 'Stairs' : null
+      state.sqFt > 0         ? state.sqFt.toLocaleString() + ' sq ft'     : null,
+      pattern                ? pattern.label                               : null,
+      color                  ? color.label                                 : null,
+      state.includeFraming   ? 'With Framing'                             : null,
+      state.accessories.railings   ? 'Railings'         : null,
+      state.accessories.fascia     ? 'Fascia'           : null,
+      state.accessories.fasteners  ? 'Hidden Fasteners' : null,
+      state.accessories.stairs     ? 'Stairs'           : null
     ].filter(Boolean);
 
     pills.forEach(function (text) {
@@ -445,23 +511,21 @@
       selList.appendChild(li);
     });
 
-    // Board count for print / lead
-    const boardCount = deckLine ? deckLine.boardCount : 0;
-    const linFt      = deckLine ? deckLine.linFt : 0;
-
     // Expose on window for lead.js and print.js
     window.ameridexEstimate = {
-      sqFt:          state.sqFt,
-      boardStyle:    style ? style.label : '',
-      color:         color ? color.label : '',
+      sqFt:           state.sqFt,
+      deckLength:     state.deckLength,
+      deckWidth:      state.deckWidth,
+      layoutPattern:  pattern ? pattern.label : '',
+      color:          color   ? color.label   : '',
       includeFraming: state.includeFraming,
-      accessories:   Object.assign({}, state.accessories),
-      totalLow:      result.totalLow,
-      totalHigh:     result.totalHigh,
-      lines:         result.lines,
-      boardCount:    boardCount,
-      linFt:         linFt,
-      wasteFactor:   WASTE_FACTOR
+      accessories:    Object.assign({}, state.accessories),
+      totalLow:       result.totalLow,
+      totalHigh:      result.totalHigh,
+      lines:          result.lines,
+      boardCount:     deckLine ? deckLine.boardCount : 0,
+      linFt:          deckLine ? deckLine.linFt : 0,
+      wasteFactor:    WASTE_FACTOR
     };
   }
 
@@ -480,7 +544,7 @@
 
   /* ---------- INIT ---------- */
   document.addEventListener('DOMContentLoaded', function () {
-    renderBoardStyles();
+    renderLayoutPatterns();
     renderColors();
     initDimensionListeners();
     initRailingReveal();
@@ -490,9 +554,9 @@
 
   /* ---------- PUBLIC API ---------- */
   window.wizard = {
-    goTo: goTo,
-    restart: restart,
-    getState: function () { return Object.assign({}, state); },
+    goTo:        goTo,
+    restart:     restart,
+    getState:    function () { return Object.assign({}, state); },
     getEstimate: function () { return calcEstimate(); }
   };
 
