@@ -17,15 +17,12 @@
 </head>
 <body>
 
-  <!-- HEADER -->
+  <!-- HEADER -- no back-to-website link; this tool is embedded on ameridex.com -->
   <header class="site-header">
     <div class="header-inner">
       <div class="header-logo">
         <img src="images/ameridex-logo.png" alt="AmeriDex Logo" />
       </div>
-      <nav class="header-nav">
-        <a href="https://www.ameridex.com" class="nav-link" target="_blank" rel="noopener">Back to AmeriDex.com</a>
-      </nav>
     </div>
   </header>
 
@@ -94,9 +91,13 @@
           </div>
         </div>
         <div class="sqft-display">
-          <span class="sqft-label">Estimated Square Footage:</span>
+          <span class="sqft-label">Estimated Area:</span>
           <span class="sqft-value" id="sqft-value">--</span>
         </div>
+
+        <!-- BOARD LENGTH SELECTOR -->
+        <div class="board-length-wrap" id="board-length-selector"></div>
+
         <div class="step-actions">
           <button class="btn btn-primary" id="step1-next">Next: Choose Deck Layout &rarr;</button>
         </div>
@@ -110,17 +111,14 @@
           <div class="step-icon">&#9645;</div>
           <div>
             <h2 class="step-title">Choose your deck layout</h2>
-            <p class="step-desc">AmeriDex is a grooved board system &mdash;. Choose the accent pattern that fits your design.</p>
+            <p class="step-desc">AmeriDex is a grooved board system. Choose the accent pattern that fits your design.</p>
           </div>
         </div>
-
-        <!-- System context note -->
         <div class="system-note">
           <span class="system-note-icon">&#9432;</span>
-          <span>All field boards are <strong>grooved profile</strong>, installed with face screws.
+          <span>All field boards are <strong>AmeriDex DrySpace Decking</strong>, installed with face screws.
           Solid boards are used only for picture frame borders and breaker board accents.</span>
         </div>
-
         <div class="card-grid" id="layout-pattern-grid" role="radiogroup" aria-label="Deck layout pattern selection"></div>
         <span class="form-error" id="layout-pattern-error"></span>
         <div class="step-actions">
@@ -137,7 +135,7 @@
           <div class="step-icon">&#11044;</div>
           <div>
             <h2 class="step-title">Pick your color</h2>
-            <p class="step-desc">All AmeriDex colors are available across every layout pattern. Color selection does affect the estimate price.</p>
+            <p class="step-desc">All AmeriDex colors are available across every layout pattern.</p>
           </div>
         </div>
         <div class="swatch-grid" id="color-swatch-grid" role="radiogroup" aria-label="Color selection"></div>
@@ -225,9 +223,7 @@
         <div class="estimate-breakdown">
           <h3 class="breakdown-title">What&#39;s included</h3>
           <table class="breakdown-table" aria-label="Estimate breakdown">
-            <thead>
-              <tr><th>Item</th><th>Low</th><th>High</th></tr>
-            </thead>
+            <thead><tr><th>Item</th><th>Low</th><th>High</th></tr></thead>
             <tbody id="breakdown-tbody"></tbody>
           </table>
         </div>

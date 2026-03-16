@@ -1,26 +1,12 @@
 /* ==========================================================
    AMERIDEX ESTIMATOR - Product Catalog & Pricing Data
 
-   AmeriDex is a GROOVED BOARD system.
-   - Field boards: always grooved profile with DexerDry
-     drainage mat pressed in; mounted with face screws
-   - Solid boards: used ONLY for picture frame borders
-     and breaker boards -- never as the field board
-   - Layout patterns drive how much solid board is needed
+   BOARD LENGTHS:
+   Standard: 12, 16, 20 ft
+   Custom:   any even whole-foot value from 8 to 24 ft
+             (matches dealerportal1 custom length rules)
 
-   LAYOUT PATTERN FLAGS:
-   hasBorder: true  => solid board runs the full perimeter (picture frame)
-   hasBreaker: true => one solid board stripe across the deck width
-   User picks one of four independent options.
-
-   PRICING BASIS:
-   - Board face width: 5.5"
-   - Gap between boards (DexerDry seal): 1/8" (0.125")
-   - Coverage per board: 5.625" = 0.46875 ft
-   - AmeriDex DrySpace Decking retail: $10.00 / lin ft
-   - Solid board retail:               $8.00  / lin ft
-
-   All prices are retail material-only estimates (USD).
+   No waste factor applied -- exact lin ft only.
    ========================================================== */
 
 const AMERIDEX_PRODUCTS = {
@@ -32,9 +18,18 @@ const AMERIDEX_PRODUCTS = {
   },
 
   /*
-   * LAYOUT PATTERNS -- 4 independent user-selectable options.
-   * No automatic combos. The user explicitly picks what they want.
+   * BOARD LENGTHS
+   * Standard options match the dealer portal.
+   * Custom: even whole-foot values, 8-24 ft.
    */
+  boardLengths: {
+    standard: [12, 16, 20],
+    customMin: 8,
+    customMax: 24,
+    customStep: 2,       // must be even whole-foot increments
+    defaultLength: 16
+  },
+
   layoutPatterns: [
     {
       id: 'standard',
@@ -72,14 +67,12 @@ const AMERIDEX_PRODUCTS = {
 
   groovedBoard: {
     label: 'AmeriDex DrySpace Decking',
-    retailPerLinFt: 10.00,
-    pricePerSqFt: { low: 20.00, high: 23.00 }
+    retailPerLinFt: 10.00
   },
 
   solidBoard: {
     label: 'Solid Board',
     retailPerLinFt: 8.00,
-    pricePerSqFt: { low: 16.00, high: 18.50 },
     pricePerLinFt: { low: 7.50, high: 8.75 }
   },
 
