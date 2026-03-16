@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Estimate Sent - AmeriDex</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .ty-wrap {
+      max-width: 580px;
+      margin: 4rem auto;
+      padding: 0 1.5rem;
+      text-align: center;
+    }
+    .ty-icon {
+      width: 72px; height: 72px;
+      background: var(--color-success);
+      color: white;
+      border-radius: 50%;
+      font-size: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.25rem;
+    }
+    .ty-title {
+      font-family: var(--font-head);
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--color-primary);
+      margin-bottom: 0.6rem;
+    }
+    .ty-sub {
+      font-size: 1rem;
+      color: var(--color-text-muted);
+      margin-bottom: 2rem;
+      line-height: 1.7;
+    }
+    .ty-steps {
+      background: var(--color-surface-alt);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      text-align: left;
+      margin-bottom: 2rem;
+    }
+    .ty-steps-title {
+      font-family: var(--font-head);
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--color-text-muted);
+      margin-bottom: 0.85rem;
+    }
+    .ty-step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.85rem;
+      margin-bottom: 0.85rem;
+    }
+    .ty-step-item:last-child { margin-bottom: 0; }
+    .ty-step-num {
+      width: 26px; height: 26px;
+      background: var(--color-primary);
+      color: white;
+      border-radius: 50%;
+      font-family: var(--font-head);
+      font-size: 0.78rem;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .ty-step-text {
+      font-size: 0.9rem;
+      color: var(--color-text);
+      line-height: 1.5;
+    }
+    .ty-step-text strong {
+      font-family: var(--font-head);
+      font-weight: 700;
+      color: var(--color-primary);
+      display: block;
+    }
+    .ty-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="header-logo">
+        <span class="logo-ameri">AMERI</span><span class="logo-dex">DEX</span>
+        <span class="logo-tagline">Composite Decking</span>
+      </div>
+      <nav class="header-nav">
+        <a href="https://www.ameridex.com" class="nav-link" target="_blank" rel="noopener">Back to AmeriDex.com</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="ty-wrap">
+
+      <div class="ty-icon">&#10003;</div>
+      <h1 class="ty-title">Your estimate is on its way!</h1>
+      <p class="ty-sub">We received your deck design. Check your inbox for your AmeriDex estimate. A local authorized dealer will follow up within 1 business day to answer questions and provide a firm quote.</p>
+
+      <div class="ty-steps">
+        <p class="ty-steps-title">What happens next</p>
+        <div class="ty-step-item">
+          <div class="ty-step-num">1</div>
+          <div class="ty-step-text">
+            <strong>Check your email</strong>
+            Your estimate summary has been sent to the address you provided.
+          </div>
+        </div>
+        <div class="ty-step-item">
+          <div class="ty-step-num">2</div>
+          <div class="ty-step-text">
+            <strong>Dealer follow-up</strong>
+            An authorized AmeriDex dealer in your area will reach out within 1 business day to discuss your project.
+          </div>
+        </div>
+        <div class="ty-step-item">
+          <div class="ty-step-num">3</div>
+          <div class="ty-step-text">
+            <strong>Get a firm quote</strong>
+            Your dealer will review your design choices and provide a precise, itemized material quote.
+          </div>
+        </div>
+      </div>
+
+      <div class="ty-actions">
+        <a href="index.html" class="btn btn-primary">Start a New Estimate</a>
+        <a href="https://www.ameridex.com" class="btn btn-ghost" target="_blank" rel="noopener">Visit AmeriDex.com</a>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <span class="logo-ameri">AMERI</span><span class="logo-dex">DEX</span>
+      </div>
+      <p class="footer-note">Estimates are for budgeting purposes only and do not constitute a formal quote. Contact an authorized AmeriDex dealer for exact pricing.</p>
+      <p class="footer-copy">&copy; <span id="footer-year"></span> AmeriDex. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>document.getElementById('footer-year').textContent = new Date().getFullYear();</script>
+</body>
+</html>
