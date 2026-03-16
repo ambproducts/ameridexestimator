@@ -8,26 +8,23 @@
      and breaker boards -- never as the field board
    - Layout patterns drive how much solid board is needed
 
+   LAYOUT PATTERN FLAGS:
+   hasBorder: true  => solid board runs the full perimeter (picture frame)
+   hasBreaker: true => one solid board stripe across the deck width
+   User picks one of four independent options.
+
    PRICING BASIS:
    - Board face width: 5.5"
    - Gap between boards (DexerDry seal): 1/8" (0.125")
    - Coverage per board: 5.625" = 0.46875 ft
-   - Lin ft of board per sq ft of deck: 1 / 0.46875 = ~2.1333
-   - Grooved board retail: $10.00 / lin ft => $21.33 / sq ft
-   - Solid board retail:   $8.00  / lin ft => $17.07 / sq ft
+   - Grooved board retail: $10.00 / lin ft
+   - Solid board retail:   $8.00  / lin ft
 
    All prices are retail material-only estimates (USD).
    ========================================================== */
 
 const AMERIDEX_PRODUCTS = {
 
-  /*
-   * BOARD DIMENSIONS
-   * Used by the calculator to convert sq ft deck area into lin ft of board.
-   * faceWidthIn:  nominal face width of the board in inches
-   * gapIn:        spacing between boards (DexerDry seal gap) in inches
-   * coverageIn:   effective coverage per board = faceWidthIn + gapIn
-   */
   boardDimensions: {
     faceWidthIn: 5.5,
     gapIn: 0.125,
@@ -35,16 +32,15 @@ const AMERIDEX_PRODUCTS = {
   },
 
   /*
-   * LAYOUT PATTERNS
-   * The field is always grooved board with DexerDry and face screws.
-   * Solid board is added only where the pattern requires it.
+   * LAYOUT PATTERNS -- 4 independent user-selectable options.
+   * No automatic combos. The user explicitly picks what they want.
    */
   layoutPatterns: [
     {
       id: 'standard',
       label: 'Standard Field',
       icon: '&#9776;',
-      detail: 'Full grooved board field with DexerDry coil pressed in. Mounted with face screws. Most common layout.',
+      detail: 'Full grooved board field with DexerDry coil pressed in. Mounted with face screws. No accent boards. Most common layout.',
       hasBorder: false,
       hasBreaker: false
     },
@@ -52,38 +48,34 @@ const AMERIDEX_PRODUCTS = {
       id: 'picture-frame',
       label: 'Picture Frame Border',
       icon: '&#9645;',
-      detail: 'Grooved field with DexerDry and face screws, plus a solid board border running the full perimeter. Clean, finished edge look.',
+      detail: 'Grooved field plus a solid board border running the full deck perimeter. Adds a clean, finished edge look.',
       hasBorder: true,
       hasBreaker: false
+    },
+    {
+      id: 'breaker-board',
+      label: 'Breaker Board',
+      icon: '&#9135;',
+      detail: 'Grooved field plus one solid board accent stripe running across the width of the deck. Breaks up the field visually.',
+      hasBorder: false,
+      hasBreaker: true
     },
     {
       id: 'pic-frame-breaker',
       label: 'Picture Frame + Breaker Board',
       icon: '&#9707;',
-      detail: 'Grooved field with DexerDry and face screws, solid perimeter border, plus one solid board accent stripe across the width of the deck.',
+      detail: 'Grooved field with both a full perimeter solid border and one solid accent stripe across the deck width. Most detailed look.',
       hasBorder: true,
       hasBreaker: true
     }
   ],
 
-  /*
-   * Grooved field board pricing.
-   * Retail: $10.00 / lin ft
-   * Converted: $10.00 x (12 / 5.625) = $21.33 / sq ft
-   * Low/high range: +/- ~5% for regional pricing variation
-   */
   groovedBoard: {
     label: 'Grooved Field Board (with DexerDry, face screws)',
     retailPerLinFt: 10.00,
     pricePerSqFt: { low: 20.00, high: 23.00 }
   },
 
-  /*
-   * Solid board pricing for border / breaker use.
-   * Retail: $8.00 / lin ft
-   * Converted: $8.00 x (12 / 5.625) = $17.07 / sq ft
-   * Low/high range: +/- ~5% for regional pricing variation
-   */
   solidBoard: {
     label: 'Solid Board',
     retailPerLinFt: 8.00,
