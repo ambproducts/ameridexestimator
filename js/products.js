@@ -5,7 +5,7 @@
    - Field boards: always grooved profile with DexerDry
      drainage mat pressed in; mounted with face screws
    - Solid boards: used ONLY for picture frame borders
-     and breaker boards — never as the field board
+     and breaker boards -- never as the field board
    - Layout patterns drive how much solid board is needed
 
    PRICING BASIS:
@@ -70,22 +70,25 @@ const AMERIDEX_PRODUCTS = {
    * Grooved field board pricing.
    * Retail: $10.00 / lin ft
    * Converted: $10.00 x (12 / 5.625) = $21.33 / sq ft
+   * Low/high range: +/- ~5% for regional pricing variation
    */
   groovedBoard: {
     label: 'Grooved Field Board (with DexerDry, face screws)',
     retailPerLinFt: 10.00,
-    pricePerSqFt: 21.33
+    pricePerSqFt: { low: 20.00, high: 23.00 }
   },
 
   /*
    * Solid board pricing for border / breaker use.
    * Retail: $8.00 / lin ft
    * Converted: $8.00 x (12 / 5.625) = $17.07 / sq ft
+   * Low/high range: +/- ~5% for regional pricing variation
    */
   solidBoard: {
     label: 'Solid Board',
     retailPerLinFt: 8.00,
-    pricePerSqFt: 17.07
+    pricePerSqFt: { low: 16.00, high: 18.50 },
+    pricePerLinFt: { low: 7.50, high: 8.75 }
   },
 
   colors: [
