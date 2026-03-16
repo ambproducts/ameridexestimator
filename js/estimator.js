@@ -51,10 +51,7 @@
 
   /* ---------- BOARD QUANTITY HELPERS ----------
    * sqFtToLinFt: converts deck sq ft to lin ft of board needed
-   *   formula: sq ft / coverage per board run (ft) = lin ft of runs
-   *   each run is deckLength ft long, so:
-   *   lin ft = (sqFt / COVERAGE_FT) -- this gives total linear footage
-   *   Then apply waste factor.
+   *   lin ft = (sqFt / COVERAGE_FT) * WASTE_FACTOR
    */
   function sqFtToLinFt(sqFt) {
     return Math.ceil((sqFt / COVERAGE_FT) * WASTE_FACTOR);
@@ -66,7 +63,7 @@
 
   /*
    * Solid border / breaker lin ft.
-   * Picture frame: 2x perimeter (one board each side of every edge).
+   * Picture frame: 2x perimeter.
    * Breaker board: one run across the deck width.
    */
   function calcSolidLinFt(pattern) {
@@ -346,12 +343,12 @@
 
   /* ---------- ESTIMATE CALCULATION ----------
    * ALL board pricing in lin ft.
-   * Grooved field:   linFt x retailPerLinFt
-   * Solid accent:    solidLinFt x retailPerLinFt
-   * Framing:         still per sq ft (subframe is area-based)
-   * Railings:        lin ft of perimeter
-   * Fascia:          lin ft of perimeter
-   * Stairs:          flat rate
+   * AmeriDex DrySpace Decking: linFt x $10.00/lin ft
+   * Solid accent boards:       solidLinFt x $8.00/lin ft
+   * Framing:                   sq ft based (area-based subframe)
+   * Railings:                  lin ft of perimeter
+   * Fascia:                    lin ft of perimeter
+   * Stairs:                    flat rate
    */
   function calcEstimate() {
     const P      = AMERIDEX_PRODUCTS;
@@ -361,42 +358,40 @@
 
     const pattern = P.layoutPatterns.find(function (p) { return p.id === state.layoutPatternId; });
 
-    // 1. Grooved field board -- priced per lin ft
+    // 1. AmeriDex DrySpace Decking field -- priced per lin ft
     if (sqFt > 0) {
       const linFt      = sqFtToLinFt(sqFt);
       const boardCount = linFtToBoardCount(linFt);
-      const low        = linFt * P.groovedBoard.retailPerLinFt;
-      const high       = low;  // single retail price; range comes from install/color tier
+      const cost       = linFt * P.groovedBoard.retailPerLinFt;
       lines.push({
-        label: 'Grooved Field Board (' + linFt.toLocaleString() + ' lin ft incl. 10% waste)',
-        low:        low,
-        high:       high,
+        label:      P.groovedBoard.label + ' (' + linFt.toLocaleString() + ' lin ft incl. 10% waste)',
+        low:        cost,
+        high:       cost,
         boardCount: boardCount,
         linFt:      linFt
       });
-      totalLow  += low;
-      totalHigh += high;
+      totalLow  += cost;
+      totalHigh += cost;
     }
 
     // 2. Solid accent boards (picture frame border and/or breaker board) -- priced per lin ft
     if (pattern && (pattern.hasBorder || pattern.hasBreaker) && sqFt > 0) {
       const solidLf  = calcSolidLinFt(pattern);
-      const low      = solidLf * P.solidBoard.retailPerLinFt;
-      const high     = low;
+      const cost     = solidLf * P.solidBoard.retailPerLinFt;
       var accentDesc = [];
-      if (pattern.hasBorder)  accentDesc.push('picture frame border');
-      if (pattern.hasBreaker) accentDesc.push('breaker board');
+      if (pattern.hasBorder)  accentDesc.push('Picture Frame Border');
+      if (pattern.hasBreaker) accentDesc.push('Breaker Board');
       lines.push({
-        label: 'Solid Accent Board -- ' + accentDesc.join(' + ') +
+        label: P.solidBoard.label + ' -- ' + accentDesc.join(' + ') +
                ' (' + solidLf.toLocaleString() + ' lin ft incl. waste)',
-        low:  low,
-        high: high
+        low:  cost,
+        high: cost
       });
-      totalLow  += low;
-      totalHigh += high;
+      totalLow  += cost;
+      totalHigh += cost;
     }
 
-    // 3. Framing -- area-based, stays in sq ft
+    // 3. Framing -- area-based
     if (state.includeFraming && sqFt > 0) {
       const low  = sqFt * P.framing.pricePerSqFt.low;
       const high = sqFt * P.framing.pricePerSqFt.high;
@@ -417,14 +412,13 @@
 
     // 5. Fascia -- perimeter lin ft
     if (state.accessories.fascia && sqFt > 0) {
-      const len    = state.deckLength || Math.sqrt(sqFt);
-      const wid    = state.deckWidth  || Math.sqrt(sqFt);
+      const len     = state.deckLength || Math.sqrt(sqFt);
+      const wid     = state.deckWidth  || Math.sqrt(sqFt);
       const perimLf = Math.ceil(2 * (len + wid) * WASTE_FACTOR);
-      const low  = perimLf * P.solidBoard.retailPerLinFt;
-      const high = low;
-      lines.push({ label: P.accessories.fascia.label + ' (' + perimLf + ' lin ft)', low: low, high: high });
-      totalLow  += low;
-      totalHigh += high;
+      const cost    = perimLf * P.solidBoard.retailPerLinFt;
+      lines.push({ label: P.accessories.fascia.label + ' (' + perimLf + ' lin ft)', low: cost, high: cost });
+      totalLow  += cost;
+      totalHigh += cost;
     }
 
     // 6. Stairs -- flat rate
@@ -468,7 +462,7 @@
       infoRow.className = 'breakdown-info-row';
       infoRow.innerHTML =
         '<td colspan="3" class="breakdown-board-count">' +
-        '&#9432; Field boards needed: <strong>' + deckLine.boardCount + ' boards</strong>' +
+        '&#9432; AmeriDex DrySpace boards needed: <strong>' + deckLine.boardCount + ' boards</strong>' +
         ' &nbsp;&bull;&nbsp; ' +
         '<strong>' + deckLine.linFt.toLocaleString() + ' lin ft</strong>' +
         ' @ ' + BOARD_LEN_FT + ' ft/board (incl. 10% waste)' +

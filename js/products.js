@@ -17,8 +17,8 @@
    - Board face width: 5.5"
    - Gap between boards (DexerDry seal): 1/8" (0.125")
    - Coverage per board: 5.625" = 0.46875 ft
-   - Grooved board retail: $10.00 / lin ft
-   - Solid board retail:   $8.00  / lin ft
+   - AmeriDex DrySpace Decking retail: $10.00 / lin ft
+   - Solid board retail:               $8.00  / lin ft
 
    All prices are retail material-only estimates (USD).
    ========================================================== */
@@ -40,7 +40,7 @@ const AMERIDEX_PRODUCTS = {
       id: 'standard',
       label: 'Standard Field',
       icon: '&#9776;',
-      detail: 'Full grooved board field with DexerDry coil pressed in. Mounted with face screws. No accent boards. Most common layout.',
+      detail: 'Full AmeriDex DrySpace Decking field with DexerDry coil pressed in. Mounted with face screws. No accent boards. Most common layout.',
       hasBorder: false,
       hasBreaker: false
     },
@@ -48,7 +48,7 @@ const AMERIDEX_PRODUCTS = {
       id: 'picture-frame',
       label: 'Picture Frame Border',
       icon: '&#9645;',
-      detail: 'Grooved field plus a solid board border running the full deck perimeter. Adds a clean, finished edge look.',
+      detail: 'AmeriDex DrySpace Decking field plus a solid board border running the full deck perimeter. Adds a clean, finished edge look.',
       hasBorder: true,
       hasBreaker: false
     },
@@ -56,7 +56,7 @@ const AMERIDEX_PRODUCTS = {
       id: 'breaker-board',
       label: 'Breaker Board',
       icon: '&#9135;',
-      detail: 'Grooved field plus one solid board accent stripe running across the width of the deck. Breaks up the field visually.',
+      detail: 'AmeriDex DrySpace Decking field plus one solid board accent stripe running across the width of the deck. Breaks up the field visually.',
       hasBorder: false,
       hasBreaker: true
     },
@@ -64,14 +64,14 @@ const AMERIDEX_PRODUCTS = {
       id: 'pic-frame-breaker',
       label: 'Picture Frame + Breaker Board',
       icon: '&#9707;',
-      detail: 'Grooved field with both a full perimeter solid border and one solid accent stripe across the deck width. Most detailed look.',
+      detail: 'AmeriDex DrySpace Decking field with both a full perimeter solid border and one solid accent stripe across the deck width. Most detailed look.',
       hasBorder: true,
       hasBreaker: true
     }
   ],
 
   groovedBoard: {
-    label: 'Grooved Field Board (with DexerDry, face screws)',
+    label: 'AmeriDex DrySpace Decking',
     retailPerLinFt: 10.00,
     pricePerSqFt: { low: 20.00, high: 23.00 }
   },
