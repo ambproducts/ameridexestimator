@@ -357,6 +357,62 @@ main { flex: 1; }
 .product-card-name { font-family: var(--font-head); font-size: 0.92rem; font-weight: 700; color: var(--color-text); margin-bottom: 0.2rem; }
 .product-card-detail { font-size: 0.78rem; color: var(--color-text-muted); }
 
+/* ============================================================
+   PRODUCT CARD BADGE
+   Appears below card detail text to signal accent board usage.
+   Matches the pill-badge pattern used in dealerportal1 status
+   indicators — navy background, white text, small caps.
+   ============================================================ */
+.product-card-badge {
+  display: inline-block;
+  margin-top: 0.65rem;
+  background: var(--color-navy);
+  color: #ffffff;
+  font-family: var(--font-head);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.22rem 0.7rem;
+  border-radius: var(--radius-pill);
+}
+/* Tint the badge when its parent card is selected */
+.product-card.selected .product-card-badge {
+  background: var(--color-red);
+}
+
+/* ============================================================
+   SYSTEM NOTE
+   Contextual info banner shown above the layout pattern grid
+   in Step 2. Parallels the info-banner / callout pattern used
+   in dealerportal1 to surface system-level context before a
+   selection is made. Blue left-border accent, icon leading.
+   ============================================================ */
+.system-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  background: var(--color-info-bg);
+  border: 1px solid var(--color-info-border);
+  border-left: 4px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  padding: 0.8rem 1rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.83rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+.system-note-icon {
+  font-size: 1rem;
+  color: var(--color-primary);
+  flex-shrink: 0;
+  margin-top: 0.05rem;
+}
+.system-note strong {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
 /* SWATCH GRID */
 .swatch-grid { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.5rem; }
 .swatch-item {
