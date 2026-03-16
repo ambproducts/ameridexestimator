@@ -1,6 +1,6 @@
 # AmeriDex Deck Estimator
 
-Public-facing customer deck estimator for AmeriDex Composite Decking.
+Public-facing customer deck estimator for AmeriDex Dryspace Decking.
 Allows customers to design their deck and receive a rough material cost estimate.
 
 ## Files
